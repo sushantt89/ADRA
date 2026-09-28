@@ -68,16 +68,19 @@ Keyboard: `/` search · `Alt+N` new client · `Alt+L` lock · `1`–`9` service 
 
 ## Put it online for testing (Render, free)
 
-The repository includes `render.yaml`, so Render can host the app as a free static site that updates every time you push to GitHub.
+The project includes a `Dockerfile`. It builds the app with Node, then serves it with nginx.
 
 1. Push this project to GitHub.
-2. Sign in at https://render.com with your GitHub account.
-3. Choose **New → Blueprint**, pick this repository, then press **Apply**.
-4. After a couple of minutes the app is live at `https://adra-client-portal.onrender.com` (or a similar address Render shows you).
-5. Every `git push` to `main` redeploys it automatically.
+2. In Render: **New → Web Service**, then pick the GitHub repo. Render detects the Dockerfile. Choose the **Free** instance type.
+   Or use **New → Blueprint**, which reads `render.yaml` and sets this up for you.
+3. After the first build (a few minutes), the app is live at the `onrender.com` address Render shows.
+4. Every `git push` to `main` redeploys it automatically.
 
-The test version shows a yellow **TEST VERSION** banner. Testers' data stays in their own browser, so use made-up details only.
-There's also a GitHub Pages workflow in `.github/workflows/deploy.yml` if you ever prefer that.
+Notes:
+
+- On the free plan, Render puts the service to sleep after about 15 minutes without visits. The next visit takes up to a minute to wake it. Once someone has opened the app, it still opens offline from their device.
+- The yellow **TEST VERSION** banner is on by default. Testers' data stays in their own browser, so use made-up details only.
+- To run the same container on your own computer: `docker build -t adra . && docker run -p 10000:10000 adra`, then open http://localhost:10000
 
 ## Try offline mode and sync
 

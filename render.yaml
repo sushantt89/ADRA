@@ -1,34 +1,11 @@
-# Render Blueprint: free static site that rebuilds whenever you push to GitHub.
-# In Render: New → Blueprint → pick this repository.
+# Render Blueprint: runs the app from the Dockerfile as a free web service.
+# Every push to the main branch on GitHub rebuilds and redeploys it.
 services:
   - type: web
     name: adra-client-portal
-    runtime: static
+    runtime: docker
+    plan: free
     branch: main
-    buildCommand: npm ci && npm run build
-    staticPublishPath: ./dist
-    pullRequestPreviewsEnabled: false
-    envVars:
-      - key: NODE_VERSION
-        value: "22"
-    # Send every page address to the app so links and reloads work
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
-    headers:
-      - path: /*
-        name: X-Frame-Options
-        value: DENY
-      - path: /*
-        name: X-Content-Type-Options
-        value: nosniff
-      - path: /*
-        name: Referrer-Policy
-        value: no-referrer
-      - path: /*
-        name: X-Robots-Tag
-        value: noindex, nofollow
-      - path: /sw.js
-        name: Cache-Control
-        value: no-cache
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /healthz
+    autoDeploy: true
