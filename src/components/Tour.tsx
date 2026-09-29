@@ -94,11 +94,14 @@ function TourOverlay({ step, index, total, onBack, onNext, onSkip }: { step: Tou
   // Find and follow the highlighted element
   useLayoutEffect(() => {
     let raf = 0
-    const el = step.target ? (document.querySelector(`[data-tour="${step.target}"]`) as HTMLElement | null) : null
     const visible = (e: HTMLElement) => {
       const r = e.getBoundingClientRect()
       return r.width > 0 && r.height > 0
     }
+    const find = (t: string) => ([...document.querySelectorAll(`[data-tour="${t}"]`)] as HTMLElement[]).find(visible) ?? null
+    // On phones, items that live in the Menu sheet are pointed out on the Menu tab instead
+    const IN_MENU = ['nav-reports', 'nav-duplicates', 'nav-admin', 'help', 'lock']
+    const el = step.target ? (find(step.target) ?? (IN_MENU.includes(step.target) ? find('menu') : null)) : null
     if (el && visible(el)) el.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' as ScrollBehavior })
     let prev = ''
     const measure = () => {

@@ -342,7 +342,7 @@ export default function ClientPage() {
 
         {tab === 'services' && (
           <div className="table-wrap">
-            <table className="table">
+            <table className="table stack">
               <thead>
                 <tr>
                   <th>Date</th>
@@ -361,22 +361,22 @@ export default function ClientPage() {
                   const includesMe = rows.some((r) => r.clientId === client.id)
                   return (
                     <tr key={s.id} className={s.deleted ? 'voided' : includesMe ? 'mine' : ''}>
-                      <td>{fmtDate(s.date)}</td>
-                      <td>{rows.length > 1 ? <span title={names.join(', ')}>Household ({rows.length})</span> : names[0]}</td>
-                      <td>
+                      <td className="c-date">{fmtDate(s.date)}</td>
+                      <td className="c-person">{rows.length > 1 ? <span title={names.join(', ')}>Household ({rows.length})</span> : names[0]}</td>
+                      <td className="c-service">
                         {s.type}
                         {s.notes && <div className="muted small">{s.notes}</div>}
                       </td>
-                      <td>{s.supportMethod}</td>
-                      <td className="num">{money(value)}</td>
-                      <td className="small">
+                      <td className="c-method">{s.supportMethod}</td>
+                      <td className="num c-value">{money(value)}</td>
+                      <td className="small c-by">
                         {s.createdBy}
                         <div className="muted">
                           {s.site}
                           {s.syncStatus === 'pending' ? ' · not synced' : ''}
                         </div>
                       </td>
-                      <td>
+                      <td className="c-act">
                         {!s.deleted && can('voidService') && (
                           <button
                             className="btn btn-small btn-ghost"

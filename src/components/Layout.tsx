@@ -17,6 +17,7 @@ export default function Layout() {
   const { session, signOut, lock } = useSession()
   const can = useCan()
   const [syncing, setSyncing] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
   const openConflicts = useLiveQuery(() => db.conflicts.filter((c) => !c.resolved).count(), []) ?? 0
   const online = useOnline()
   const toast = useToast()
@@ -135,7 +136,7 @@ export default function Layout() {
     <div className="app">
       {import.meta.env.VITE_TEST_BANNER !== 'off' && (
         <div className="test-banner" role="note">
-          TEST VERSION — use made-up details only. Do not enter real client information.
+          TEST VERSION — use made-up details only.<span className="desktop-only-inline"> Do not enter real client information.</span>
         </div>
       )}
       <header className="topbar">
@@ -144,35 +145,8 @@ export default function Layout() {
             <img src={ADRA_LOGO} alt="ADRA" className="brand-logo" />
           </span>
         </NavLink>
-        <nav className="nav">
-          <NavLink to="/" end>
-            Search
-          </NavLink>
-          <NavLink to="/new" data-tour="new-client">
-            New client
-          </NavLink>
-          {can('viewReports') && (
-            <NavLink to="/reports" data-tour="nav-reports">
-              Reports{unreadReports > 0 && <span className="nav-badge">{unreadReports}</span>}
-            </NavLink>
-          )}
-          {can('mergeClients') && (
-            <NavLink to="/duplicates" data-tour="nav-duplicates">
-              Duplicates
-            </NavLink>
-          )}
-          <NavLink to="/sync">
-            Sync{openConflicts > 0 && <span className="nav-badge">{openConflicts}</span>}
-          </NavLink>
-          {can('admin') && (
-            <NavLink to="/admin" data-tour="nav-admin">
-              Admin
-            </NavLink>
-          )}
-          <NavLink to="/settings">Device</NavLink>
-          <NavLink to="/help" data-tour="help">
-            Help
-          </NavLink>
+        <nav className="nav desktop-only">
+          <NavLinks can={can} unreadReports={unreadReports} openConflicts={openConflicts} />
         </nav>
         <div className="status">
           <span data-tour="online" className={`pill ${online ? 'pill-ok' : 'pill-off'}`} title={online ? 'Connected' : 'No internet — records are saved on this device'}>
@@ -185,19 +159,85 @@ export default function Layout() {
             disabled={!online || syncing}
             title={online ? 'Send saved records to the server' : 'Connect to the internet to sync'}
           >
-            {syncing ? 'Syncing…' : pending ? `${pending} not synced · Sync` : 'All synced'}
+            {syncing ? 'Syncing…' : pending ? (
+              <>
+                {pending}
+                <span className="desktop-only-inline"> not synced · Sync</span>
+                <span className="mobile-only-inline"> to sync</span>
+              </>
+            ) : (
+              'All synced'
+            )}
           </button>
-          <span className="who" title="Signed in">
+          <span className="who desktop-only-inline" title="Signed in">
             {session.userName} ({session.role}) · {session.site}
           </span>
-          <button className="btn btn-small btn-ghost" onClick={lock} title="Lock screen (Alt+L)" data-tour="lock">
+          <button className="btn btn-small btn-ghost desktop-only-inline" onClick={lock} title="Lock screen (Alt+L)" data-tour="lock">
             Lock
           </button>
-          <button className="btn btn-small btn-ghost" onClick={signOut}>
+          <button className="btn btn-small btn-ghost desktop-only-inline" onClick={signOut}>
             End shift
           </button>
         </div>
       </header>
+
+      {/* Phone: bottom tab bar within thumb reach */}
+      <nav className="tabbar mobile-only" aria-label="Main">
+        <NavLink to="/" end onClick={() => setMenuOpen(false)}>
+          <TabIcon d="M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM21 21l-5-5" />
+          <span>Search</span>
+        </NavLink>
+        <NavLink to="/new" onClick={() => setMenuOpen(false)} data-tour="new-client">
+          <TabIcon d="M12 5v14M5 12h14" />
+          <span>New client</span>
+        </NavLink>
+        <NavLink to="/sync" onClick={() => setMenuOpen(false)} data-tour="nav-sync">
+          <TabIcon d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4" />
+          <span>Sync</span>
+          {openConflicts > 0 && <span className="tab-badge">{openConflicts}</span>}
+        </NavLink>
+        <button className={menuOpen ? 'active' : ''} onClick={() => setMenuOpen((o) => !o)} aria-expanded={menuOpen} data-tour="menu">
+          <TabIcon d="M4 7h16M4 12h16M4 17h16" />
+          <span>Menu</span>
+          {unreadReports > 0 && <span className="tab-badge">{unreadReports}</span>}
+        </button>
+      </nav>
+
+      {menuOpen && (
+        <div className="menu-sheet-backdrop mobile-only" onClick={() => setMenuOpen(false)}>
+          <div className="menu-sheet" role="dialog" aria-label="Menu" onClick={(e) => e.stopPropagation()}>
+            <div className="menu-who">
+              <b>{session.userName}</b>
+              <span className="muted small">
+                {session.role} · {session.site}
+              </span>
+            </div>
+            <nav className="menu-links" onClick={() => setMenuOpen(false)}>
+              <NavLinks can={can} unreadReports={unreadReports} openConflicts={openConflicts} />
+            </nav>
+            <div className="menu-actions">
+              <button
+                className="btn"
+                onClick={() => {
+                  setMenuOpen(false)
+                  lock()
+                }}
+              >
+                Lock screen
+              </button>
+              <button
+                className="btn"
+                onClick={() => {
+                  setMenuOpen(false)
+                  signOut()
+                }}
+              >
+                End shift
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {(needRefresh || installEvt) && (
         <div className="banner">
@@ -235,5 +275,48 @@ export default function Layout() {
         <Outlet />
       </main>
     </div>
+  )
+}
+
+function NavLinks({ can, unreadReports, openConflicts }: { can: ReturnType<typeof useCan>; unreadReports: number; openConflicts: number }) {
+  return (
+    <>
+      <NavLink to="/" end>
+        Search
+      </NavLink>
+      <NavLink to="/new" data-tour="new-client">
+        New client
+      </NavLink>
+      {can('viewReports') && (
+        <NavLink to="/reports" data-tour="nav-reports">
+          Reports{unreadReports > 0 && <span className="nav-badge">{unreadReports}</span>}
+        </NavLink>
+      )}
+      {can('mergeClients') && (
+        <NavLink to="/duplicates" data-tour="nav-duplicates">
+          Duplicates
+        </NavLink>
+      )}
+      <NavLink to="/sync">
+        Sync{openConflicts > 0 && <span className="nav-badge">{openConflicts}</span>}
+      </NavLink>
+      {can('admin') && (
+        <NavLink to="/admin" data-tour="nav-admin">
+          Admin
+        </NavLink>
+      )}
+      <NavLink to="/settings">Device</NavLink>
+      <NavLink to="/help" data-tour="help">
+        Help
+      </NavLink>
+    </>
+  )
+}
+
+function TabIcon({ d }: { d: string }) {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d={d} />
+    </svg>
   )
 }

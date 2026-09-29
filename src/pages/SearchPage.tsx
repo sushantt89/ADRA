@@ -206,8 +206,15 @@ export default function SearchPage() {
       )}
 
       <p className="muted small hint">
-        Spelling doesn't need to be exact: "Jon Smyth" finds "John Smith". On a touch screen, swipe a person right to record {quick ? `"${quick.label}"` : 'the first service'} for them, or left for their whole household. Shortcuts: <kbd>/</kbd> search · <kbd>Alt</kbd>+<kbd>N</kbd> new client · <kbd>↑</kbd>
-        <kbd>↓</kbd> <kbd>Enter</kbd> open · <kbd>Alt</kbd>+<kbd>L</kbd> lock.
+        Spelling doesn't need to be exact: "Jon Smyth" finds "John Smith".{' '}
+        <span className="mobile-only-inline">
+          Swipe a person right to record {quick ? `"${quick.label}"` : 'the first service'} for them, or left for their whole household.
+        </span>
+        <span className="desktop-only-inline">
+          On a touch screen, swipe a person right to record {quick ? `"${quick.label}"` : 'the first service'} for them, or left for their whole household. Shortcuts:{' '}
+          <kbd>/</kbd> search · <kbd>Alt</kbd>+<kbd>N</kbd> new client · <kbd>↑</kbd>
+          <kbd>↓</kbd> <kbd>Enter</kbd> open · <kbd>Alt</kbd>+<kbd>L</kbd> lock.
+        </span>
       </p>
 
       <h2 className="section-title">{searching ? `${hits.length} result${hits.length === 1 ? '' : 's'}` : clients.length ? 'Recently updated' : ''}</h2>
